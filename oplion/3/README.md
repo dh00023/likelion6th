@@ -22,7 +22,7 @@ $ rails new project_name
 $ rails g controller home
 ```
 
-#### Controller와 View 동시에 생성하기
+#### Controller와 View, Acition 동시에 생성하기
 
 ```
 $ rails g controller home index attack defense
@@ -60,3 +60,118 @@ end
 params는 우리가 보내는 정보가 저장된 보따리이다.
 `.erb`에서는 `<%=%>`안에 루비코드를 써야한다.
 이때 instance 변수(`@`)를 써야지 저장된 정보를 전달할 수 있다.
+
+[실습](./frist_project)
+
+## 3. CRUD 구현
+
+Create / Read / Update / Delete 이다.
+
+- 변수는 일시적으로 정보를 저장한다.
+- DB는 영구적으로 정보를 저장한다.(많은 정보를 체계적으로 관리)
+
+
+#### Get / Post
+
+- get : 입력한 정보를 url에 노출한다.(정보를 보여줘도 상관 없을 때)
+- post : 입력한 정보를 숨긴다.(url에 노출되지 않는다.)
+
+#### CSRF
+웹 페이지에 악성 코드나 링크를 포함하는 공격 방법이다.
+
+```erb
+<%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+```
+
+### CR
+
+#### Model 생성
+```
+$ rails g model Post title content:text
+      invoke  active_record
+      create    db/migrate/20180226143511_create_posts.rb
+      create    app/models/post.rb
+      invoke    test_unit
+      create      test/models/post_test.rb
+      create      test/fixtures/posts.yml
+
+```
+
+`migrate`, `model`파일이 생성된다.
+
+- migrate에서는 테이블의 모양을 결정할 수 있다.
+
+#### Model 확정 / 삭제
+```
+$ rails db:migrate
+$ rails db:drop
+```
+
+#### Model / Controller
+```rb
+class HomeController < ApplicationController
+  def create
+  	@post = Post.new #테이블의 한 행을 추가
+  	@post.title = params[:post_title] 
+  	@post.content = params[:post_content]
+  	@post.save #테이블에 써준 내용 모두 저장
+
+  	redirect_to '/'
+  end
+end
+```
+
+#### Console 실행
+
+```
+$ rails c
+```
+
+
+### D
+
+특정한 게시물을 삭제하기 위해서는 **id**를 통해서 삭제해야한다.
+
+```rb
+# routes
+get 'home/destroy/:post_id'=>'home#destroy'
+```
+```erb
+<a href="/home/destroy/<%= p.id %> "> 삭제</a>
+```
+```rb
+def destroy
+  post = Post.find(params[:post_id])
+  post.destroy
+  redirect_to '/'
+end
+```
+각 게시물의 id를 전달해서 삭제를 해준다.
+
+### U
+
+```erb
+<form action="/home/update/<%=@post.id%>" method="post">
+  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+  제목: <input type="text" name="post_title" value="<%=@post.title%>"><br><br>
+  내용: <textarea name="post_content" ><%=@post.content%></textarea><br>
+  <input type="submit" value="제출">
+</form>
+```
+```rb
+get 'home/edit/:post_id'=>'home#edit'
+post 'home/update/:post_id'=>'home#update'
+```
+```rb
+def edit
+  @post = Post.find(params[:post_id])
+end
+
+def update
+  post = Post.find(params[:post_id])
+  post.title = params[:post_title] 
+  post.content = params[:post_content]
+  post.save #테이블에 써준 내용 모두 저장
+  redirect_to '/'
+end
+```

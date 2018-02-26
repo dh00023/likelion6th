@@ -1,0 +1,11 @@
+<h1>여기는 게시물 목록이 나올 페이지입니다!</h1>
+
+<% @posts.each do |p| %>
+	<p> 제목 : <%= p.title %> </p>
+	<p> 내용 : <%= p.content %> </p>
+	<a href="/home/destroy/<%= p.id %> "> 삭제</a>
+	<a href="/home/edit/<%= p.id %> "> 수정</a>
+	-------------------------------<br>
+<% end %>
+
+<a href="/home/new">새로운 글 쓰기</a>
