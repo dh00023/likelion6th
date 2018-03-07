@@ -430,3 +430,69 @@ class UsersController < ApplicationController
   end
 end
 ```
+
+### 2. 로그인 만들기
+
+**stateless protocol** : 요청을 받으면 서버에서 응답을 보내고 거기서 끝, 일정한 정보를 지속적으로 들고 있을 수 없다.
+
+#### session
+일정시간(브라우저 종료시까지) 반 영구적으로 상태를 유지(서버)
+- 로그인, 장바구니
+
+```
+$ rails g controller Sessions new create destroy
+```
+```ruby
+# routes
+resources :sessions, only: [:new, :create, :destroy]
+```
+
+```erb
+<!-- sessions/new.html.erb -->
+<%= form_tag(sessions_path) do %>
+  email : <%= text_field_tag 'email' %>
+  password : <%= password_field_tag 'password' %>
+  <%= submit_tag '제출' %>
+<% end %>
+```
+```ruby
+# sessions controller
+
+class SessionsController < ApplicationController
+  def new
+  end
+
+  def create
+    user = User.find_by(email: params[:email])
+    if user && user.authenticate(params[:password])
+      session[:user_id] = user.id
+      redirect_to '/'
+  else
+      flash[:alert] = '로그인에 실패하셨습니다.'
+      redirect_to new_session_path
+  end
+  end
+
+  def destroy
+    session.delete(:user_id)
+
+    redirect_to '/'
+  end
+end
+```
+```erb
+<!-- application.html.erb -->
+<% if session[:user_id] %>
+  <li><%=User.find_by(id: session[:user_id]).name %></li>
+  <%= link_to '로그아웃', session_path(session[:user_id]),method: 'delete'%>
+      
+<% else %>
+  <%= link_to '회원가입',new_user_path %>
+  <%= link_to '로그인',new_session_path %>
+<% end %>
+```
+
+#### cookie
+사용자의 브라우저에 저장되는 텍스트 정보(클라이언트)
+쿠키를 통해 세션을 구현한다.
+

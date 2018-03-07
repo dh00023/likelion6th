@@ -9,7 +9,14 @@
   </head>
 
   <body>
-  	<%= link_to '회원가입',new_user_path %>
+  	<% if session[:user_id] %>
+      <li><%=User.find_by(id: session[:user_id]).name %></li>
+      <%= link_to '로그아웃', session_path(session[:user_id]),method: 'delete'%>
+      
+    <% else %>
+      <%= link_to '회원가입',new_user_path %>
+      <%= link_to '로그인',new_session_path %>
+    <% end %>
     <%= yield %>
   </body>
 </html>
