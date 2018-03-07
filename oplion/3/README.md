@@ -359,3 +359,74 @@ edit_post GET    /posts/:id/edit(.:format) posts#edit
 - 공통점
   1. 자동으로 CSRF 방지 코드 삽입
   2. 기본 method는 POST
+
+## 레일즈 심화2
+
+### 1. 회원가입기능
+
+#### 모델 생성
+```
+$ rails g model User name email password_digest
+$ rails db:migrate
+```
+
+비밀번호를 암호화하기 위해서 `password_digest`로 컬럼명을 지정한다.
+
+#### 암호화
+```
+gem 'bcrypt', '~> 3.1.7'
+```
+```
+$ bundle install
+```
+```ruby
+# user.rb
+class User < ApplicationRecord
+  has_secure_password
+end
+```
+```ruby
+User.create(name: 'lion', email: 
+'lion@likelion.org', password: '123456')
+```
+로 생성하면 저장이 될때는 password가 bcrypt암호화가 되어서 password_digest에 저장된다.
+
+```
+#<User id: 1, name: "lion", email: "lion@likelion.org", password_digest: "$2a$10$x04aTFR5bs06aKqlgET3s.On6RDhPdtKK3vMzu08FSj...", created_at: "2018-03-07 06:49:31", updated_at: "2018-03-07 06:49:31">
+```
+```ruby
+$ user.authenticate('1234')
+=> false
+$ user.authenticate('123456')
+=> true(관련정보나옴)
+```
+
+#### controller
+
+```
+$ rails g controller Users new create
+```
+```ruby
+# routes
+resources :users
+```
+```ruby
+# new.html.erb
+<%= form_tag(users_path) do %>
+  name : <%= text_field_tag 'name' %><br>
+  email : <%= text_field_tag 'email' %><br>
+  password : <%= password_field_tag 'password' %><br>
+  <%= submit_tag '제출' %>
+<% end -%>
+```
+```ruby
+class UsersController < ApplicationController
+  def new
+  end
+
+  def create
+    User.create(name: params[:name],email: params[:email],password: params[:password])
+    redirect_to '/'
+  end
+end
+```
