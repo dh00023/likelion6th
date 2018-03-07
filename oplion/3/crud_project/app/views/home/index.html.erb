@@ -4,6 +4,8 @@
 	<p> 제목 : <%= p.title %> </p>
 	<p> 내용 : <%= p.content %> </p>
 	<a href="/home/destroy/<%= p.id %> "> 삭제</a>
+	<%= link_to '삭제2', "/home/destroy/#{p.id}"%>
+	<%= link_to '삭제3', post_destroy_path(post_id: p.id) %>
 	<a href="/home/edit/<%= p.id %> "> 수정</a>
 	-------------------------------<br>
 <% end %>

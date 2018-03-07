@@ -4,3 +4,15 @@
 	내용: <textarea name="post_content" ></textarea><br>
 	<input type="submit" value="제출">
 </form>
+
+<br><br>
+------------form_tag------------------
+
+<%= form_tag(posts_path, method: "post") do %>
+	<%= label_tag "post_title",'제목'%>
+	<%= text_field_tag 'post_title',nil,placeholder: '제목을 입력해주세요.' %><br>
+	<%= label_tag "post_content",'내용'%>
+	<%= text_area_tag 'post_content',nil,placeholder: '내용을 입력해주세요.' %><br>
+	<%= submit_tag '제출' %>
+<% end %>
+	

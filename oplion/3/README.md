@@ -175,3 +175,187 @@ def update
   redirect_to '/'
 end
 ```
+
+## 4. 레일즈 심화
+
+### View Helper
+
+- `link_to` : `<a>`를 레일즈에서 더 간단하게 쓸 수 있는 방법이다.
+
+```erb
+<a href = "/posts/destroy/<%=post.id%>">삭제</a>
+<%=link_to '삭제', "/posts/destroy/#{post.id}">
+```
+
+**여기서 `""`안에 `#{}`을 사용한다는 점을 유의해야한다.**
+
+- **route**
+
+`as:`로 간단하게 이름을 설정할 수 있다.
+```rb
+get 'home/destroy/:post_id'=>'home#destroy',as: 'post_destroy'
+```
+```erb
+<%= link_to '삭제3', post_destroy_path(post_id: p.id) %>
+```
+
+## 5. Scaffold & Restful
+
+migrate / controller / model / view / route를 한번에 만들어 주는 것이다.
+
+```
+$ rails g scaffold post title:string content:text
+      invoke  active_record
+      create    db/migrate/20180301144540_create_posts.rb
+      create    app/models/post.rb
+      invoke    test_unit
+      create      test/models/post_test.rb
+      create      test/fixtures/posts.yml
+      invoke  resource_route
+       route    resources :posts
+      invoke  scaffold_controller
+      create    app/controllers/posts_controller.rb
+      invoke    erb
+      create      app/views/posts
+      create      app/views/posts/index.html.erb
+      create      app/views/posts/edit.html.erb
+      create      app/views/posts/show.html.erb
+      create      app/views/posts/new.html.erb
+      create      app/views/posts/_form.html.erb
+      invoke    test_unit
+      create      test/controllers/posts_controller_test.rb
+      invoke    helper
+      create      app/helpers/posts_helper.rb
+      invoke      test_unit
+      invoke    jbuilder
+      create      app/views/posts/index.json.jbuilder
+      create      app/views/posts/show.json.jbuilder
+      create      app/views/posts/_post.json.jbuilder
+      invoke  test_unit
+      create    test/system/posts_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/posts.coffee
+      invoke    scss
+      create      app/assets/stylesheets/posts.scss
+      invoke  scss
+      create    app/assets/stylesheets/scaffolds.scss
+```
+
+#### RESTful
+무엇(resource)을 어떻게(HTTP method) 할 지 표현 하는 것이다.
+- HTTP method : GET / POST / PUT / PATCH / DELETE
+
+```rb
+resources :posts
+```
+```
+$ rails routes
+  Prefix Verb   URI Pattern               Controller#Action
+     root GET    /                         posts#index
+    posts GET    /posts(.:format)          posts#index
+          POST   /posts(.:format)          posts#create
+ new_post GET    /posts/new(.:format)      posts#new
+edit_post GET    /posts/:id/edit(.:format) posts#edit
+     post GET    /posts/:id(.:format)      posts#show
+          PATCH  /posts/:id(.:format)      posts#update
+          PUT    /posts/:id(.:format)      posts#update
+          DELETE /posts/:id(.:format)      posts#destroy
+```
+
+#### form_for
+
+```erb
+<%= form_for(post) do |form| %>
+  <% if post.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(post.errors.count, "error") %> prohibited this post from being saved:</h2>
+
+      <ul>
+      <% post.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title, id: :post_title %>
+  </div>
+
+  <div class="field">
+    <%= form.label :content %>
+    <%= form.text_area :content, id: :post_content %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
+```
+
+`form_for`는 레일즈 helper이다. 새 게시물인지 이미 만들어진 게시물인지 판별해 create, update action에 자동으로 보내준다.
+
+- `before_action` : action이 실행되기 이전에 실행해라. 즉, 해당하는 액션의 가장 윗줄에 삽입되도록 하는 것이다.
+```rb
+  before_action :set_post, only: [:show, :edit, :update, :destroy]
+
+...
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_post
+      @post = Post.find(params[:id])
+    end
+```
+즉, `@post = Post.find(params[:id])`는 show, edit, update, destroy 액션이 실행되기 전에 실행된다.
+
+#### Controller
+
+- `respond_to` : 지정된 형식에 따라 다른 템플릿을 출력
+- `redirect_to` : 뒤의 특정 페이지로 돌아가라
+- falsh : redirect 전후로만 데이터를 저장하고 싶을 때, 현재 요청과 다음 요청에서만 정보를 저장한다. 
+  - `flash[:notice]` 성공했을때 
+  - `flash[:alert]` 실패했을때
+  - 레일즈에서는 이것도 줄여서 표현하고 있다.
+```rb
+    respond_to do |format|
+      if @post.save
+        format.html { redirect_to @post, notice: 'Post was successfully created.' }
+        format.json { render :show, status: :created, location: @post }
+      else
+        format.html { render :new }
+        format.json { render json: @post.errors, status: :unprocessable_entity }
+      end
+    end
+```
+
+- Strong Parameter : 받고 싶은 것만 받자(보안 강화)
+
+```rb
+    def post_params
+      params.require(:post).permit(:title, :content)
+    end
+```
+
+#### form_for vs form_tag
+
+- `form_for` : **특정한 모델 편집** ex) 게시물 생성, 수정
+
+
+- `form_tag` : **범용적인 입력 양식** ex)검색 키워드, 조건
+```erb
+<%= form_tag("/home/create", method: "post") do %>
+  <%= label_tag "post_title",'제목'%>
+  <%= text_field_tag 'post_title',nil,placeholder: '제목을 입력해주세요.' %><br>
+  <%= label_tag "post_content",'내용'%>
+  <%= text_area_tag 'post_content',nil,placeholder: '내용을 입력해주세요.' %><br>
+  <%= submit_tag '제출' %>
+<% end %>
+```
+이때 tag에서 제목, 내용, placeholder순서를 지켜야한다.
+
+- 공통점
+  1. 자동으로 CSRF 방지 코드 삽입
+  2. 기본 method는 POST
