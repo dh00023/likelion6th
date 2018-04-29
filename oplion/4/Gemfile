@@ -1,0 +1,12 @@
+source 'https://rubygems.org/'
+
+ruby '2.5.0'
+
+# HTML parser
+gem 'nokogiri'
+
+# A simple HTTP and REST client for Ruby,
+gem 'rest-client'
+
+# downloads the exchange rates from the European Central Bank.
+gem 'eu_central_bank'
